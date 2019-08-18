@@ -1,0 +1,31 @@
+---
+- name: "prepare  server for installation"
+  package:
+    name: "{{item}}"
+    state: present 
+  with_items:
+    - httpd
+    - php
+    - php-apcu 
+    - php-intl
+    - php-mbstring 
+    - php-xml
+
+
+- name: " download media wiki"
+  command: "wget https://releases.wikimedia.org/mediawiki/1.33/mediawiki-1.33.0.tar.gz"
+
+- name: "unzip the media wiki file " 
+  unarchive:
+    src: mediawiki-1.33.0.tar.gz
+    dest: /var/www/html
+
+
+- name: "copy the localsettings.php file"
+   copy:
+     src: ./LocalSettings.php
+     dest: /var/www/html/MediaWiki/LocalSettings.php
+
+- name: "change dbsettngs"
+   command: "sed 's/$wgDBserver = /$wgDBserver = \"{{dbaddress}}\"/g' 's/$wgDBuser =/$wgDBuser =\"{{dbusernmae}}\"/g' 's/$wgDBpassword =/$wgDBpassword =\"{{dbpassword}}\"/g'   /etc/mediawiki/LocalSettings.php"
+
