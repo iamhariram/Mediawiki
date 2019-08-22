@@ -73,9 +73,9 @@ resource "aws_route_table" "private_route_rz1" {
     }  
 }
 
-resource "aws_route_table_association" "private_subnet_1" {
+resource "aws_route_table_association" "public_subnet_1" {
     subnet_id = "${aws_subnet.myvpc_rz1.id}"
-    route_table_id = "${aws_route_table.private_route_rz1.id}"
+      route_table_id = "${aws_route_table.public_route.id}"
 }
 
 
@@ -88,9 +88,9 @@ resource "aws_route_table" "private_route_rz3" {
     }  
 }
 
-resource "aws_route_table_association" "private_subnet_3" {
+resource "aws_route_table_association" "public_subnet_3" {
     subnet_id = "${aws_subnet.myvpc_rz3.id}"
-    route_table_id = "${aws_route_table.private_route_rz3.id}"
+    route_table_id = "${aws_route_table.public_route.id}"
 }
     
 resource "aws_security_group" "allowssh" {
@@ -114,10 +114,6 @@ resource "aws_security_group" "allowssh" {
 }
 
 
-output "jump_server" {
-  value = "${aws_instance.jump_server.public_ip}"
-
-}
 output "myvpc_id" {
   value = "${aws_vpc.myvpc.id}"
 }

@@ -20,5 +20,6 @@ resource "aws_db_instance" "mediadb" {
   username = "${var.dbuname}"
   password = "${var.dbpasswd}"
   multi_az = "true"
+  publicly_accessible = "true"
   db_subnet_group_name = "${aws_db_subnet_group.mysubnetgroup.id}"
 }
