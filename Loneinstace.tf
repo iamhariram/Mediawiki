@@ -2,8 +2,7 @@ provider "aws" {
  
   version = "~> 2.0"
   region = "ap-south-1"
-  access_key = "AKIAJSTIA6PJV4JMSO4A"
-  secret_key = "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"
+  
 }
 
 
@@ -39,28 +38,58 @@ resource "aws_elb" "myeld" {
     lb_port = 80
     lb_protocol = "http"
   }
-  instances = [aws_instance.test1[0].id , aws_instance.test1[1].id]
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 3
+    target              = "HTTP:80/"
+    interval            = 30
+  }
+  instances = [aws_instance.test1.id , aws_instance.test2.id]
   subnets = data.aws_subnet_ids.sb_name.ids
-
 }
 
 
 resource "aws_instance" "test1" {
-   count = 2
    ami = data.aws_ami.var_ami.id
    vpc_security_group_ids = [data.aws_security_group.sg_name.id]
    instance_type = "t2.micro"
    key_name = aws_key_pair.sshkey.key_name
    tags = {
-     name = "server"
+     Name = "Jenkins-server"
    }
-   user_data = <<EOF
-     "apt-get update"
-     "apt-get install apache2 -y"
+   user_data = <<-EOF
+     #!/bin/bash
+     apt-get update
+     apt-get install docker.io -y
+     apt-get install ansible -y
+     apt install openjdk-8-jdk -y
+     wget -q -O - https://pkg.jenkins.io/debian/jenkins-ci.org.key | sudo apt-key add -
+     echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list
+     apt-get update
+     apt-get install jenkins -y
      EOF
   
 }
 
+resource "aws_instance" "test2" {
+   ami = data.aws_ami.var_ami.id
+   vpc_security_group_ids = [data.aws_security_group.sg_name.id]
+   instance_type = "t2.micro"
+   key_name = aws_key_pair.sshkey.key_name
+   tags = {
+     Name = "docker-server"
+   }
+   user_data = <<-EOF
+     #!/bin/bash
+     apt-get update
+     apt-get install docker.io -y
+     apt-get install ansible -y
+     apt-get install java-8-openjdk-amd64 -y
+     apt-get install jenkins
+     EOF
+  
+}
 output "var_ami" {
   value = "${data.aws_ami.var_ami.id}"
 }
@@ -73,8 +102,12 @@ output "sg_name" {
   value = "${data.aws_security_group.sg_name.id}"
 }
 
-output "aws_instances" {
-  value = "${aws_instance.test1[0].id}"
+output "aws_instances_test1" {
+  value = "${aws_instance.test1.public_ip}"
+}
+
+output "aws_instances_test2" {
+  value = "${aws_instance.test2.public_ip}"
 }
 
 output "sb_name" {
